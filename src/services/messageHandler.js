@@ -13,6 +13,11 @@ class MessageHandler {
         await whatsappService.sendMessage(message.from, response, message.id);
       }
       await whatsappService.markAsRead(message.id);
+    }else if (message?.type === 'interactive'){
+      const option = message?.interactive?.button_reply?.title.toLowerCase().trim();
+      await this.handelMenuOption(message.from, option);
+      await whatsappService.markAsRead(message.id)
+
     }
   }
 
@@ -27,7 +32,7 @@ class MessageHandler {
 
   async sendWelcomeMessage(to, messageId, senderInfo) {
     const name = this.getSenderName(senderInfo);
-    const welcomeMessage = `Hola ${name}, Bienvenido a RubTech_Bot, Tu tienda de domotica en línea. ¿En qué puedo ayudarte hoy?`;
+    const welcomeMessage = `Hola ${name}, Bienvenido a RubTech_Bot 🤖, Tu tienda de domotica en línea. ¿En qué puedo ayudarte hoy?`;
     await whatsappService.sendMessage(to, welcomeMessage, messageId);
   }
 
@@ -46,6 +51,24 @@ class MessageHandler {
     ]
 
     await whatsappService.sendInterateButtons(to, menuMessage, buttons)
+  }
+
+  async handelMenuOption(to, option){
+    let response;
+    switch(option){
+      case 'agendar':
+        response = 'Agendar Cita';
+        break;
+      case 'consultar':
+        response = "Realiza tu consulta"
+        break
+      case 'ubicacion':
+        response = 'Esta es nuestra ubicacion';
+        break
+      default: 
+        response = 'Lo siento no entendi tu seleccion, por favor elige una de las opciones del menu.'
+    }
+    await whatsappService.sendMessage(to, response)
   }
 
 }
