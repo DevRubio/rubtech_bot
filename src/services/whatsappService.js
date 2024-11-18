@@ -68,6 +68,44 @@ class WhatsAppService {
       console.log(error)
     }
   }
+
+  async sendMediaMessage(to, type, mediaUrl, caption){
+    try {
+      const mediaObject = {};
+      switch (type) {
+        case 'image':
+          mediaObject.image = {link: mediaUrl, caption: caption}
+          break;
+        case 'audio':
+          mediaObject.audio = {link: mediaUrl}    
+          break
+        case 'video':
+          mediaObject.video = {link: mediaUrl, caption: caption}
+          break
+        case 'document':
+          mediaObject.document = {link: mediaUrl, caption: caption, filename: 'Rubtech.pdf' }
+          break
+        default:
+          throw new Error(`No Soported Media Type ${type}`)
+      }
+
+      await axios({
+        method: 'POST',
+        url: `https://graph.facebook.com/${config.API_VERSION}/${config.BUSINESS_PHONE}/messages`,
+        headers:{
+          Authorization: `Bearer ${config.API_TOKEN}`,
+        },
+        data:{
+          messaging_product: 'whatsapp',
+          to,
+          type: type,
+          ...mediaObject
+        }
+      })
+    } catch (error) {
+      console.log(`Error sending Media ${error}`)
+    }
+  }
 }
 
 export default new WhatsAppService();
