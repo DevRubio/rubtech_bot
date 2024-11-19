@@ -3,7 +3,7 @@ import whatsappService from './whatsappService.js';
 class MessageHandler {
 
   constructor(){
-    this.appointmentState = {};
+    this.quotationState = {};
   }
   async handleIncomingMessage(message, senderInfo) {
     if (message?.type === 'text') {
@@ -14,8 +14,8 @@ class MessageHandler {
         await this.sendWelcomeMenu(message.from)
       }else if (incomingMessage === 'media'){
         await this.sendMedia(message.from)
-      } else if(this.appointmentState[message.from]){
-        await this.handleAppointmentFlow(message.from, incomingMessage);
+      } else if(this.quotationState[message.from]){
+        await this.handleQuotationFlow(message.from, incomingMessage);
       }      
       else {
         const response = `Echo: ${message.text.body}`;
@@ -52,7 +52,7 @@ class MessageHandler {
         type: 'reply', reply: { id: 'option 1', title: 'Cotizacion'}
       },
       {
-        type: 'reply', reply: { id: 'option 2', title: 'Consultar'}
+        type: 'reply', reply: { id: 'option 2', title: 'Consulta'}
       },
       {
         type: 'reply', reply: { id: 'option 3', title: 'Ubicacion'}
@@ -66,10 +66,10 @@ class MessageHandler {
     let response;
     switch(option){
       case 'cotizacion':
-        this.appointmentState[to] = {step: 'name'}
+        this.quotationState[to] = {step: 'name'}
         response = 'Por favor ingresa tu Nombre';
         break;
-      case 'consultar':
+      case 'consulta':
         response = "Realiza tu consulta"
         break
       case 'ubicacion':
@@ -104,8 +104,35 @@ class MessageHandler {
     await whatsappService.sendMediaMessage(to, type, mediaUrl, caption);
   } 
 
-  async handleAppointmentFlow(to, message){
-    const state = this.appointmentState[to];
+  completeQuotation(to){
+    const quotation = this.quotationState[to];
+    delete this.quotationState[to];
+
+    const userData = [
+      to,
+      quotation.name,
+      quotation.productType,
+      quotation.productName,
+      quotation.location,
+      new Date().toISOString()
+    ]
+
+    console.log(userData)
+
+    return `Gracias por solicitar su cotizacion 
+    Detalles de la cotizacion:
+
+    *Nombre:* ${quotation.name}
+    *Tipo Producto:* ${quotation.productType}
+    *Nombre Producto:* ${quotation.productName}
+    *Ubicacion:* ${quotation.location}
+
+    Nos pondremos en contacto contigo pronto
+    `
+  }
+
+  async handleQuotationFlow(to, message){
+    const state = this.quotationState[to];
     let response;
 
     switch (state.step) {
@@ -126,7 +153,7 @@ class MessageHandler {
         break
       case 'location':
         state.location = message;
-        response = 'Gracias por tu informacion, en un momento sera compartida la cotizacion'
+        response = this.completeQuotation(to);
         break;
     }
 
