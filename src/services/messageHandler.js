@@ -1,4 +1,5 @@
 import whatsappService from './whatsappService.js';
+import appendToSheet from './googleSheetsServices.js';
 
 class MessageHandler {
 
@@ -117,7 +118,7 @@ class MessageHandler {
       new Date().toISOString()
     ]
 
-    console.log(userData)
+    appendToSheet(userData)
 
     return `Gracias por solicitar su cotizacion 
     Detalles de la cotizacion:
