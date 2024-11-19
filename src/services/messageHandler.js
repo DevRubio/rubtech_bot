@@ -1,6 +1,10 @@
 import whatsappService from './whatsappService.js';
 
 class MessageHandler {
+
+  constructor(){
+    this.appointmentState = {};
+  }
   async handleIncomingMessage(message, senderInfo) {
     if (message?.type === 'text') {
       const incomingMessage = message.text.body.toLowerCase().trim();
@@ -10,7 +14,9 @@ class MessageHandler {
         await this.sendWelcomeMenu(message.from)
       }else if (incomingMessage === 'media'){
         await this.sendMedia(message.from)
-      }       
+      } else if(this.appointmentState[message.from]){
+        await this.handleAppointmentFlow(message.from, incomingMessage);
+      }      
       else {
         const response = `Echo: ${message.text.body}`;
         await whatsappService.sendMessage(message.from, response, message.id);
@@ -43,7 +49,7 @@ class MessageHandler {
     const menuMessage = 'Elige una Opcion'
     const buttons = [
       {
-        type: 'reply', reply: { id: 'option 1', title: 'Agendar'}
+        type: 'reply', reply: { id: 'option 1', title: 'Cotizacion'}
       },
       {
         type: 'reply', reply: { id: 'option 2', title: 'Consultar'}
@@ -59,8 +65,9 @@ class MessageHandler {
   async handelMenuOption(to, option){
     let response;
     switch(option){
-      case 'agendar':
-        response = 'Agendar Cita';
+      case 'cotizacion':
+        this.appointmentState[to] = {step: 'name'}
+        response = 'Por favor ingresa tu Nombre';
         break;
       case 'consultar':
         response = "Realiza tu consulta"
@@ -96,6 +103,35 @@ class MessageHandler {
 
     await whatsappService.sendMediaMessage(to, type, mediaUrl, caption);
   } 
+
+  async handleAppointmentFlow(to, message){
+    const state = this.appointmentState[to];
+    let response;
+
+    switch (state.step) {
+      case 'name':
+        state.name = message;
+        state.step = 'productType';
+        response = "Gracias, ahora indicame en que tipo de producto estas interesado (por ejemplo: camaras de seguridad, productos de domotica)";        
+        break;
+      case 'productType':
+        state.productType = message;
+        state.step = 'productName';
+        response = '¿Indica el nombre del producto?';
+        break;
+      case 'productName':
+        state.productName = message;
+        state.step = 'location';
+        response = '¿Donde se encuentra ubicado?'
+        break
+      case 'location':
+        state.location = message;
+        response = 'Gracias por tu informacion, en un momento sera compartida la cotizacion'
+        break;
+    }
+
+    await whatsappService.sendMessage(to, response);
+  }
 }
 
 export default new MessageHandler();
