@@ -106,6 +106,54 @@ class WhatsAppService {
       console.log(`Error sending Media ${error}`)
     }
   }
+
+  async sendContactMessage(to, contact){
+    try {
+      await axios({
+        method: 'POST',
+        url: `https://graph.facebook.com/${config.API_VERSION}/${config.BUSINESS_PHONE}/messages`,
+        headers: {
+          Authorization: `Bearer ${config.API_TOKEN}`,
+        },
+        data:{
+          messaging_product: 'whatsapp',
+          to,
+          type: 'contacts',
+          contacts: [contact]
+        }
+      })
+      
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async sendLocationMessage(to, latitude, longitude, name, address){
+    try {
+
+      await axios({
+        method: 'POST',
+        url: `https://graph.facebook.com/${config.API_VERSION}/${config.BUSINESS_PHONE}/messages`,
+        headers: {
+          Authorization: `Bearer ${config.API_TOKEN}`,
+        },
+        data:{
+          messaging_product: 'whatsapp',
+          to,
+          type: 'location',
+          location: {
+            latitude: latitude,
+            longitude: longitude,
+            name: name,
+            address: address
+          }
+        }
+      })
+      
+    } catch (error) {
+      console.error(error)
+    }
+  }
 }
 
 export default new WhatsAppService();
